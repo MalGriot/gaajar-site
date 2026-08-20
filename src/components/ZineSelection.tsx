@@ -1,0 +1,108 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import type { Book } from "@/data/books";
+import ZineInfoPanel from "./ZineInfoPanel";
+import ZineViewer from "./ZineViewer";
+import infoStyles from "./ZineInfoPanel.module.css";
+import styles from "./ZineSelection.module.css";
+
+export default function ZineSelection({
+  book,
+  onClose,
+}: {
+  book: Book | null;
+  onClose: () => void;
+}) {
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const openBtnRef = useRef<HTMLButtonElement>(null);
+  const closeXRef = useRef<HTMLButtonElement>(null);
+
+  // Reset to the card state whenever the selected book changes (including close) —
+  // adjusted during render per React's guidance, rather than in an effect.
+  const [prevBook, setPrevBook] = useState(book);
+  if (book !== prevBook) {
+    setPrevBook(book);
+    setViewerOpen(false);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      if (viewerOpen) setViewerOpen(false);
+      else onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose, viewerOpen]);
+
+  // Only on a fresh selection — not on every viewerOpen toggle, which would
+  // clobber onBack's explicit refocus onto the "Open Zine" button.
+  useEffect(() => {
+    if (book) closeXRef.current?.focus();
+  }, [book]);
+
+  const show = Boolean(book);
+
+  return (
+    <div
+      className={`${styles.overlay} ${show ? styles.show : ""}`}
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (viewerOpen) setViewerOpen(false);
+        else onClose();
+      }}
+      aria-hidden={!show}
+    >
+      {book && (
+        <div className={styles.stage}>
+          <div className={`${styles.card} ${viewerOpen ? styles.cardHidden : ""}`}>
+            <button ref={closeXRef} className={styles.closeX} onClick={onClose} aria-label="Close">
+              &times;
+            </button>
+            <Image
+              src={book.cover}
+              alt={`${book.title} cover`}
+              width={book.coverW}
+              height={book.coverH}
+              className={styles.img}
+            />
+            <ZineInfoPanel
+              book={book}
+              actions={
+                <>
+                  <button
+                    ref={openBtnRef}
+                    className={infoStyles.btn}
+                    onClick={() => setViewerOpen(true)}
+                  >
+                    Open Zine &rarr;
+                  </button>
+                  <a
+                    className={`${infoStyles.btn} ${infoStyles.ghost}`}
+                    href={book.purchaseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Buy on shop &#8599;
+                  </a>
+                </>
+              }
+            />
+          </div>
+
+          {viewerOpen && (
+            <ZineViewer
+              book={book}
+              onBack={() => {
+                setViewerOpen(false);
+                openBtnRef.current?.focus();
+              }}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

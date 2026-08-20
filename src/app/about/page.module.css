@@ -1,0 +1,149 @@
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px 20px 14px;
+  min-height: calc(100dvh - 66px);
+  max-height: calc(100dvh - 66px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.portraitCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.frame {
+  width: 15dvh;
+  height: 15dvh;
+  min-width: 76px;
+  min-height: 76px;
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  outline: 2px solid var(--rust);
+  outline-offset: 4px;
+  transform: rotate(-4deg);
+}
+
+.portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.handle {
+  font-family: var(--font-marginalia), cursive;
+  color: var(--rust);
+  font-size: 14px;
+  margin: 0;
+}
+
+.copyCol {
+  max-width: 62ch;
+  text-align: center;
+}
+
+.eyebrow {
+  font-family: var(--font-marginalia), cursive;
+  color: var(--rust);
+  font-size: 16px;
+  margin: 0 0 2px;
+}
+
+.h1 {
+  font-size: clamp(24px, 7vw, 40px);
+  margin-bottom: 6px;
+}
+
+.dek {
+  color: var(--ink);
+  font-size: clamp(12px, 3.4vw, 14px);
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+
+.body {
+  color: var(--ink-soft);
+  font-size: clamp(11px, 3.1vw, 13px);
+  line-height: 1.35;
+  margin: 0 0 10px;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: var(--moss);
+}
+
+.facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: clamp(10px, 2.8vw, 12px);
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+@media (min-width: 900px) {
+  .wrap {
+    padding: 12px 24px 20px;
+    min-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - 80px);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    text-align: left;
+  }
+
+  .frame {
+    width: 190px;
+    height: 190px;
+    max-width: 190px;
+    max-height: 190px;
+  }
+
+  .handle {
+    font-size: 18px;
+  }
+
+  .eyebrow {
+    font-size: 20px;
+  }
+
+  .copyCol {
+    text-align: left;
+  }
+
+  .h1 {
+    font-size: clamp(40px, 4.5vw, 60px);
+    margin-bottom: 12px;
+  }
+
+  .dek {
+    font-size: 16px;
+    margin: 0 0 14px;
+  }
+
+  .body {
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+
+  .facts {
+    font-size: 14px;
+    gap: 6px;
+  }
+}

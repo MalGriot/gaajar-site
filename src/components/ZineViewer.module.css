@@ -1,0 +1,225 @@
+.viewerWrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.36s ease, transform 0.36s ease;
+}
+
+.viewerWrap.entered {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--paper);
+  border: 1.6px solid var(--ink);
+  padding: 28px 30px 30px;
+  max-width: 760px;
+  width: 100%;
+  box-shadow: 14px 18px 0 var(--shadow);
+}
+
+.backBtn {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 9px 16px 10px;
+}
+
+.content {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.bookColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  width: 100%;
+  max-width: 300px;
+}
+
+.bookArea {
+  position: relative;
+  width: 100%;
+  perspective: 1800px;
+  touch-action: pan-y;
+}
+
+.bookArea::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 4%;
+  bottom: 4%;
+  width: 14px;
+  background: linear-gradient(to right, var(--shadow), transparent);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.book {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1);
+  cursor: grab;
+}
+
+.page:active {
+  cursor: grabbing;
+}
+
+.pageFace {
+  position: absolute;
+  inset: 0;
+  background: var(--paper-2);
+  border: 1.4px solid var(--ink);
+  box-shadow: 5px 8px 14px var(--shadow);
+  clip-path: polygon(0% 1%, 2% 0%, 98% 0%, 100% 1%, 100% 99%, 98% 100%, 2% 100%, 0% 99%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  overflow: hidden;
+}
+
+.pageImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--line) 0,
+    var(--line) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+}
+
+.placeholderStamp {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rust);
+  border: 1.4px dashed var(--rust);
+  padding: 5px 12px;
+  transform: rotate(-6deg);
+}
+
+.placeholderText {
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+
+.pageNum {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.edgeZonePrev {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  min-width: 28px;
+  z-index: 999;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: transform 0.16s ease;
+}
+
+.navBtn:hover:not(:disabled) {
+  transform: translateY(-50%) scale(1.08);
+}
+
+.navBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.navPrev {
+  left: -14px;
+}
+
+.navNext {
+  right: -14px;
+}
+
+.pageIndicator {
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 640px) {
+  .frame {
+    padding: 22px 18px 24px;
+  }
+  .content {
+    justify-content: center;
+  }
+  .bookColumn {
+    max-width: 260px;
+  }
+}

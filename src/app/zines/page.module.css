@@ -1,0 +1,43 @@
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  min-height: calc(100dvh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyebrow {
+  font-family: var(--font-marginalia), cursive;
+  color: var(--rust);
+  font-size: 20px;
+  margin: 0 0 6px;
+}
+
+.h1 {
+  font-size: clamp(40px, 7vw, 72px);
+  margin-bottom: 14px;
+}
+
+.dek {
+  max-width: 58ch;
+  color: var(--ink-soft);
+  font-size: 15.5px;
+  margin: 0 0 44px;
+}
+
+@media (min-width: 900px) {
+  .wrap {
+    padding: 12px 24px 20px;
+  }
+
+  .h1 {
+    font-size: clamp(40px, 5vw, 56px);
+    margin-bottom: 8px;
+  }
+
+  .dek {
+    margin: 0 0 12px;
+  }
+}
