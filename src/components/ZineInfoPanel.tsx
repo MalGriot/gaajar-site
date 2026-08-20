@@ -7,11 +7,11 @@ import styles from "./ZineInfoPanel.module.css";
 export default function ZineInfoPanel({
   book,
   actions,
-  note,
+  showDescription = true,
 }: {
   book: Book;
   actions: ReactNode;
-  note?: ReactNode;
+  showDescription?: boolean;
 }) {
   return (
     <div className={styles.info}>
@@ -20,7 +20,7 @@ export default function ZineInfoPanel({
         {book.award ? ` · ${book.award}` : ""}
       </span>
       <h2>{book.title}</h2>
-      <p className={styles.desc}>{book.description}</p>
+      {showDescription && <p className={styles.desc}>{book.description}</p>}
       <dl className={styles.specs}>
         {book.pages && (
           <div>
@@ -34,7 +34,6 @@ export default function ZineInfoPanel({
         </div>
       </dl>
       <div className={styles.ctaRow}>{actions}</div>
-      {note && <p className={styles.note}>{note}</p>}
     </div>
   );
 }

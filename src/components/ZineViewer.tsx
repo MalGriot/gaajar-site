@@ -22,17 +22,45 @@ function buildPages(book: Book): Page[] {
   return Array.from({ length: count }, () => ({ placeholder: true }));
 }
 
+function PageContent({ book, page, index }: { book: Book; page: Page; index: number }) {
+  return (
+    <>
+      {"src" in page ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={page.src} alt={`${book.title} — page ${index + 1}`} className={styles.pageImg} />
+      ) : (
+        <div className={styles.placeholder}>
+          <span className={styles.placeholderStamp + " mono"}>scan pending</span>
+          <span className={styles.placeholderText + " mono"}>pages coming soon</span>
+        </div>
+      )}
+      <span className={styles.pageNum + " mono"}>{index + 1}</span>
+    </>
+  );
+}
+
+// Live finger-drag progress (0→1), rendered via inline transform each pointermove.
 type DragState = { index: number; mode: "next" | "prev"; startX: number; progress: number } | null;
+// A button/key-triggered turn, played by a CSS @keyframes animation rather than
+// JS — requestAnimationFrame silently stalls on a backgrounded tab and can wedge
+// navigation, but a CSS animation keeps its own timeline and still resolves
+// (instantly, via the site's reduced-motion rule) once the tab is foregrounded.
+type TurningState = { index: number; mode: "next" | "prev" } | null;
 
 export default function ZineViewer({ book, onBack }: { book: Book; onBack: () => void }) {
   const [pages] = useState(() => buildPages(book));
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [rightIndex, setRightIndex] = useState(() => Math.min(1, pages.length - 1));
   const [entered, setEntered] = useState(false);
   const [drag, setDrag] = useState<DragState>(null);
+  const [turning, setTurning] = useState<TurningState>(null);
   const dragRef = useRef<DragState>(null);
+  const turningRef = useRef<TurningState>(null);
   const bookAreaRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
+
+  const leftIndex = rightIndex - 1;
+  const minRight = Math.min(1, pages.length - 1);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setEntered(true));
@@ -43,14 +71,28 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
     backBtnRef.current?.focus();
   }, []);
 
-  const atStart = currentIndex === 0;
-  const atEnd = currentIndex === pages.length - 1;
+  const atStart = rightIndex <= minRight;
+  const atEnd = rightIndex >= pages.length - 1;
 
   function next() {
-    setCurrentIndex((i) => Math.min(i + 1, pages.length - 1));
+    if (dragRef.current || turningRef.current || atEnd) return;
+    const state: TurningState = { index: rightIndex, mode: "next" };
+    turningRef.current = state;
+    setTurning(state);
   }
   function prev() {
-    setCurrentIndex((i) => Math.max(i - 1, 0));
+    if (dragRef.current || turningRef.current || atStart) return;
+    const state: TurningState = { index: leftIndex, mode: "prev" };
+    turningRef.current = state;
+    setTurning(state);
+  }
+
+  function handleTurnAnimEnd(i: number) {
+    if (!turningRef.current || turningRef.current.index !== i) return;
+    const mode = turningRef.current.mode;
+    turningRef.current = null;
+    setTurning(null);
+    setRightIndex((r) => (mode === "next" ? Math.min(r + 1, pages.length - 1) : Math.max(r - 1, minRight)));
   }
 
   useEffect(() => {
@@ -77,9 +119,10 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pages.length]);
+  }, [pages.length, rightIndex]);
 
   function startDrag(index: number, mode: "next" | "prev", clientX: number, pointerId: number, target: Element) {
+    if (turningRef.current) return;
     const state: DragState = { index, mode, startX: clientX, progress: 0 };
     dragRef.current = state;
     setDrag(state);
@@ -89,10 +132,10 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
   function moveDrag(clientX: number) {
     const state = dragRef.current;
     if (!state) return;
-    const width = bookAreaRef.current?.getBoundingClientRect().width ?? 1;
+    const halfWidth = (bookAreaRef.current?.getBoundingClientRect().width ?? 2) / 2;
     const deltaX = clientX - state.startX;
     const raw = state.mode === "next" ? -deltaX : deltaX;
-    const progress = Math.max(0, Math.min(1, raw / (width * 0.6)));
+    const progress = Math.max(0, Math.min(1, raw / (halfWidth * 0.7)));
     const updated: DragState = { ...state, progress };
     dragRef.current = updated;
     setDrag(updated);
@@ -109,15 +152,6 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
     }
   }
 
-  function rotationFor(i: number) {
-    if (drag && drag.index === i) {
-      return drag.mode === "next" ? -180 * drag.progress : -180 + 180 * drag.progress;
-    }
-    return i < currentIndex ? -180 : 0;
-  }
-
-  const hasRealPages = book.previewImages.length > 0;
-
   return (
     <div className={`${styles.viewerWrap} ${entered ? styles.entered : ""}`}>
       <div className={styles.frame} ref={frameRef}>
@@ -130,104 +164,94 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
           &larr; Back
         </button>
 
-        <div className={styles.content}>
-          <div className={styles.bookColumn}>
-            <div className={styles.bookArea} ref={bookAreaRef}>
-              {!atStart && (
+        <div className={styles.bookArea} ref={bookAreaRef}>
+          <div className={styles.book}>
+            {pages.map((page, i) => {
+              const isDraggingThis = drag?.index === i;
+              const isTurningThis = turning?.index === i;
+              const isInteractive = (i === rightIndex && !atEnd) || (i === leftIndex && !atStart);
+
+              let transform: string;
+              let foldOpacity: number | undefined;
+              if (isDraggingThis && drag) {
+                const rotation = drag.mode === "next" ? -180 * drag.progress : -180 + 180 * drag.progress;
+                const fold = Math.sin(drag.progress * Math.PI);
+                transform = `rotateY(${rotation}deg) scaleX(${1 - 0.06 * fold})`;
+                foldOpacity = fold * 0.6;
+              } else {
+                transform = `rotateY(${i < rightIndex ? -180 : 0}deg) scaleX(1)`;
+              }
+
+              const turnClass = isTurningThis
+                ? turning?.mode === "next"
+                  ? styles.turningNext
+                  : styles.turningPrev
+                : "";
+
+              return (
                 <div
-                  className={styles.edgeZonePrev}
-                  onPointerDown={(e) =>
-                    startDrag(currentIndex - 1, "prev", e.clientX, e.pointerId, e.currentTarget)
-                  }
-                  onPointerMove={(e) =>
-                    dragRef.current?.mode === "prev" && moveDrag(e.clientX)
-                  }
+                  key={i}
+                  className={`${styles.page} ${turnClass}`}
+                  style={{
+                    zIndex: i < rightIndex ? i : pages.length - i,
+                    transform: isTurningThis ? undefined : transform,
+                    transition: isDraggingThis ? "none" : undefined,
+                    pointerEvents: isInteractive ? "auto" : "none",
+                  }}
+                  onPointerDown={(e) => {
+                    if (i === rightIndex) startDrag(i, "next", e.clientX, e.pointerId, e.currentTarget);
+                    else if (i === leftIndex) startDrag(i, "prev", e.clientX, e.pointerId, e.currentTarget);
+                  }}
+                  onPointerMove={(e) => {
+                    if (dragRef.current?.index === i) moveDrag(e.clientX);
+                  }}
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
-                  aria-hidden="true"
-                />
-              )}
-
-              <div className={styles.book}>
-                {pages.map((page, i) => {
-                  const isDraggingThis = drag?.index === i;
-                  return (
-                    <div
-                      key={i}
-                      className={styles.page}
-                      style={{
-                        zIndex: i < currentIndex ? i : pages.length - i,
-                        transform: `rotateY(${rotationFor(i)}deg)`,
-                        transition: isDraggingThis ? "none" : undefined,
-                        pointerEvents: i === currentIndex ? "auto" : "none",
-                      }}
-                      onPointerDown={(e) =>
-                        i === currentIndex &&
-                        !atEnd &&
-                        startDrag(i, "next", e.clientX, e.pointerId, e.currentTarget)
-                      }
-                      onPointerMove={(e) =>
-                        dragRef.current?.mode === "next" &&
-                        dragRef.current.index === i &&
-                        moveDrag(e.clientX)
-                      }
-                      onPointerUp={endDrag}
-                      onPointerCancel={endDrag}
-                    >
-                      <div className={styles.pageFace}>
-                        {"src" in page ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={page.src} alt={`${book.title} — page ${i + 1}`} className={styles.pageImg} />
-                        ) : (
-                          <div className={styles.placeholder}>
-                            <span className={styles.placeholderStamp + " mono"}>scan pending</span>
-                            <span className={styles.placeholderText + " mono"}>pages coming soon</span>
-                          </div>
-                        )}
-                        <span className={styles.pageNum + " mono"}>{i + 1}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                className={`${styles.navBtn} ${styles.navPrev}`}
-                onClick={prev}
-                disabled={atStart}
-                aria-label="Previous page"
-              >
-                &#8249;
-              </button>
-              <button
-                className={`${styles.navBtn} ${styles.navNext}`}
-                onClick={next}
-                disabled={atEnd}
-                aria-label="Next page"
-              >
-                &#8250;
-              </button>
-            </div>
-
-            <div className={styles.pageIndicator + " mono"}>
-              {currentIndex + 1} / {pages.length}
-            </div>
+                  onAnimationEnd={() => handleTurnAnimEnd(i)}
+                >
+                  <div className={styles.pageFace}>
+                    <PageContent book={book} page={page} index={i} />
+                  </div>
+                  <div className={styles.pageFaceBack}>
+                    <PageContent book={book} page={page} index={i} />
+                  </div>
+                  <div className={styles.pageFold} style={foldOpacity !== undefined ? { opacity: foldOpacity } : undefined} />
+                </div>
+              );
+            })}
           </div>
 
-          <ZineInfoPanel
-            book={book}
-            actions={
-              <a className={infoStyles.btn} href={book.purchaseUrl} target="_blank" rel="noopener noreferrer">
-                Buy this zine &#8599;
-              </a>
-            }
-            note={
-              !hasRealPages
-                ? "Interior scans aren’t in yet — this preview shows the mechanism, not the real pages."
-                : undefined
-            }
-          />
+          <button
+            className={`${styles.navBtn} ${styles.navPrev}`}
+            onClick={prev}
+            disabled={atStart}
+            aria-label="Previous page"
+          >
+            &#8249;
+          </button>
+          <button
+            className={`${styles.navBtn} ${styles.navNext}`}
+            onClick={next}
+            disabled={atEnd}
+            aria-label="Next page"
+          >
+            &#8250;
+          </button>
         </div>
+
+        <div className={styles.pageIndicator + " mono"}>
+          {leftIndex >= 0 ? `${leftIndex + 1}–${rightIndex + 1}` : `${rightIndex + 1}`} / {pages.length}
+        </div>
+
+        <ZineInfoPanel
+          book={book}
+          showDescription={false}
+          actions={
+            <a className={infoStyles.btn} href={book.purchaseUrl} target="_blank" rel="noopener noreferrer">
+              Buy this zine &#8599;
+            </a>
+          }
+        />
       </div>
     </div>
   );
