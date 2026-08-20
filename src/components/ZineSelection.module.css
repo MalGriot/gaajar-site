@@ -76,9 +76,18 @@
 }
 
 @media (max-width: 640px) {
+  .overlay {
+    padding: 10px;
+    max-height: 100svh;
+  }
   .card {
     flex-direction: column;
     text-align: center;
-    padding: 26px;
+    padding: 16px;
+    max-height: calc(100svh - 20px);
+    overflow-y: auto;
+  }
+  .img {
+    width: 110px;
   }
 }
