@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { display, body, marginalia, mono } from "./fonts";
 import Nav from "@/components/Nav";
+import SiteBackground from "@/components/SiteBackground";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${body.variable} ${marginalia.variable} ${mono.variable}`}
     >
       <body>
+        <SiteBackground />
         <Nav />
         {children}
       </body>
