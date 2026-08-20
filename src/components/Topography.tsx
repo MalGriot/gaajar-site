@@ -156,10 +156,30 @@ const CTRL_INDICES = [
   [-1, -3, 8, 9],
 ];
 
+const paletteToRgb = (palette: string[]): [number, number, number][] =>
+  palette.map(hexToRgb);
+
+const paletteAt = (t: number, arr: [number, number, number][]): [number, number, number] => {
+  const n = arr.length;
+  const ft = ((t % n) + n) % n;
+  const i0 = Math.floor(ft);
+  const i1 = (i0 + 1) % n;
+  const f = ft - i0;
+  const c0 = arr[i0];
+  const c1 = arr[i1];
+  return [
+    c0[0] + (c1[0] - c0[0]) * f,
+    c0[1] + (c1[1] - c0[1]) * f,
+    c0[2] + (c1[2] - c0[2]) * f,
+  ];
+};
+
 interface TopographyProps {
   lowColor?: string;
   midColor?: string;
   highColor?: string;
+  colorPalette?: string[];
+  colorCycleSpeed?: number;
   speed?: number;
   morphAmount?: number;
   morphSpeed?: number;
@@ -185,6 +205,8 @@ const Topography = ({
   lowColor = "#5227FF",
   midColor = "#FF9FFC",
   highColor = "#FFFFFF",
+  colorPalette,
+  colorCycleSpeed = 0.03,
   speed = 0.35,
   morphAmount = 3.0,
   morphSpeed = 0.05,
@@ -206,6 +228,15 @@ const Topography = ({
   className = "",
 }: TopographyProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const paletteRef = useRef<[number, number, number][] | null>(
+    colorPalette && colorPalette.length >= 2 ? paletteToRgb(colorPalette) : null
+  );
+  const cycleSpeedRef = useRef(colorCycleSpeed);
+
+  useEffect(() => {
+    paletteRef.current = colorPalette && colorPalette.length >= 2 ? paletteToRgb(colorPalette) : null;
+    cycleSpeedRef.current = colorCycleSpeed;
+  }, [colorPalette, colorCycleSpeed]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -316,6 +347,17 @@ const Topography = ({
       const u = program.uniforms;
       u.iTime.value = time;
 
+      const palette = paletteRef.current;
+      if (palette && palette.length >= 2) {
+        const phase = time * cycleSpeedRef.current;
+        const low = paletteAt(phase, palette);
+        const mid = paletteAt(phase + 1, palette);
+        const high = paletteAt(phase + 2, palette);
+        (u.uLow.value as Float32Array).set(low);
+        (u.uMid.value as Float32Array).set(mid);
+        (u.uHigh.value as Float32Array).set(high);
+      }
+
       const ma = u.uMorphAmount.value as number;
       const sp = u.uSpeed.value as number;
       const msp = u.uMorphSpeed.value as number;
@@ -353,7 +395,8 @@ const Topography = ({
     const io = new IntersectionObserver(
       ([entry]) => {
         isVisible = entry.isIntersecting;
-        isVisible ? tryStart() : tryStop();
+        if (isVisible) tryStart();
+        else tryStop();
       },
       { threshold: 0 }
     );
@@ -361,7 +404,8 @@ const Topography = ({
 
     const onVisibility = () => {
       isPageVisible = !document.hidden;
-      isPageVisible ? tryStart() : tryStop();
+      if (isPageVisible) tryStart();
+      else tryStop();
     };
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -405,9 +449,11 @@ const Topography = ({
     u.uOpacity.value = opacity;
     u.uGrain.value = grain ? 1.0 : 0.0;
     u.uGrainIntensity.value = grainIntensity;
-    u.uLow.value = new Float32Array(hexToRgb(lowColor));
-    u.uMid.value = new Float32Array(hexToRgb(midColor));
-    u.uHigh.value = new Float32Array(hexToRgb(highColor));
+    if (!paletteRef.current) {
+      u.uLow.value = new Float32Array(hexToRgb(lowColor));
+      u.uMid.value = new Float32Array(hexToRgb(midColor));
+      u.uHigh.value = new Float32Array(hexToRgb(highColor));
+    }
     u.uMouseEnabled.value = mouseInteraction ? 1.0 : 0.0;
     u.uMouseRadius.value = mouseRadius;
     u.uMouseStrength.value = mouseStrength;
@@ -415,6 +461,8 @@ const Topography = ({
     lowColor,
     midColor,
     highColor,
+    colorPalette,
+    colorCycleSpeed,
     speed,
     morphAmount,
     morphSpeed,

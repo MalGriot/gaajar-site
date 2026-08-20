@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Book } from "@/data/books";
 import ZineInfoPanel from "./ZineInfoPanel";
+import { PushButton } from "./PushButton";
 import infoStyles from "./ZineInfoPanel.module.css";
 import styles from "./ZineViewer.module.css";
 
@@ -247,9 +248,9 @@ export default function ZineViewer({ book, onBack }: { book: Book; onBack: () =>
           book={book}
           showDescription={false}
           actions={
-            <a className={infoStyles.btn} href={book.purchaseUrl} target="_blank" rel="noopener noreferrer">
+            <PushButton as="a" href={book.purchaseUrl} target="_blank" rel="noopener noreferrer">
               Buy this zine &#8599;
-            </a>
+            </PushButton>
           }
         />
       </div>

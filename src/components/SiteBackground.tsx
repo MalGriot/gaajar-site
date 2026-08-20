@@ -11,9 +11,8 @@ export default function SiteBackground() {
   return (
     <div className={styles.backdrop}>
       <Topography
-        lowColor="#5b6e4f"
-        midColor="#c74e28"
-        highColor="#e8b23a"
+        colorPalette={["#5b6e4f", "#c74e28", "#2c4c8c", "#e8b23a"]}
+        colorCycleSpeed={0.025}
         speed={0.12}
         morphAmount={2.0}
         morphSpeed={0.03}

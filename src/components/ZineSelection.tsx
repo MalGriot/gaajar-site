@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Book } from "@/data/books";
 import ZineInfoPanel from "./ZineInfoPanel";
 import ZineViewer from "./ZineViewer";
+import { PushButton } from "./PushButton";
 import infoStyles from "./ZineInfoPanel.module.css";
 import styles from "./ZineSelection.module.css";
 
@@ -27,10 +28,18 @@ export default function ZineSelection({
     setViewerOpen(false);
   }
 
+  // Single path back to the card state, however it's triggered (Back button,
+  // Escape, or clicking outside the open book) — all three need the same
+  // focus restoration onto "Open Zine", not just the explicit Back button.
+  function closeViewer() {
+    setViewerOpen(false);
+    openBtnRef.current?.focus();
+  }
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      if (viewerOpen) setViewerOpen(false);
+      if (viewerOpen) closeViewer();
       else onClose();
     }
     document.addEventListener("keydown", onKey);
@@ -50,7 +59,7 @@ export default function ZineSelection({
       className={`${styles.overlay} ${show ? styles.show : ""}`}
       onClick={(e) => {
         if (e.target !== e.currentTarget) return;
-        if (viewerOpen) setViewerOpen(false);
+        if (viewerOpen) closeViewer();
         else onClose();
       }}
       aria-hidden={!show}
@@ -72,13 +81,9 @@ export default function ZineSelection({
               book={book}
               actions={
                 <>
-                  <button
-                    ref={openBtnRef}
-                    className={infoStyles.btn}
-                    onClick={() => setViewerOpen(true)}
-                  >
+                  <PushButton ref={openBtnRef} onClick={() => setViewerOpen(true)}>
                     Open Zine &rarr;
-                  </button>
+                  </PushButton>
                   <a
                     className={`${infoStyles.btn} ${infoStyles.ghost}`}
                     href={book.purchaseUrl}
@@ -92,15 +97,7 @@ export default function ZineSelection({
             />
           </div>
 
-          {viewerOpen && (
-            <ZineViewer
-              book={book}
-              onBack={() => {
-                setViewerOpen(false);
-                openBtnRef.current?.focus();
-              }}
-            />
-          )}
+          {viewerOpen && <ZineViewer book={book} onBack={closeViewer} />}
         </div>
       )}
     </div>

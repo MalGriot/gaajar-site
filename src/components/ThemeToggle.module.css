@@ -1,0 +1,129 @@
+.wrap {
+  position: relative;
+  display: inline-block;
+  width: 62px;
+  height: 35px;
+  flex-shrink: 0;
+}
+
+.outer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 192px;
+  height: 108px;
+  border-radius: 12px;
+  background: #ebe6ef;
+  border: 4px solid var(--ink);
+  transform: scale(0.32);
+  transform-origin: top left;
+}
+
+.outer:has(input:checked) {
+  background: #3a3347;
+}
+
+.inner {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding: 0 8px;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 4px solid var(--ink);
+}
+
+.track {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  border: 4px solid var(--ink);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.track:has(input:checked) {
+  transform: scaleX(-1);
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.face {
+  width: 100%;
+  height: 100%;
+  background: #f24c00;
+  position: relative;
+}
+
+.nose {
+  width: 0;
+  height: 0;
+  z-index: 20;
+  border-left: 24px solid transparent;
+  border-right: 24px solid transparent;
+  border-top: 20px solid var(--ink);
+  position: relative;
+}
+
+.noseTip {
+  width: 0;
+  height: 0;
+  position: absolute;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-top: 15px solid #e44901;
+  top: -20px;
+  left: -18px;
+}
+
+.panelLeft {
+  width: 24px;
+  height: 36px;
+  z-index: 10;
+  position: absolute;
+  top: 9px;
+  left: 0;
+  background: #f24c00;
+  border-right: 2px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  transform: skewY(39deg);
+}
+
+.panelRight {
+  width: 25px;
+  height: 36px;
+  z-index: 10;
+  position: absolute;
+  top: 9px;
+  left: 24px;
+  background: #c44002;
+  border-right: 4px solid var(--ink);
+  border-left: 2px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  transform: skewY(-39deg);
+}
+
+.bar {
+  width: 24px;
+  height: 4px;
+  flex-shrink: 0;
+  background: var(--ink);
+  border-radius: 9999px;
+}
