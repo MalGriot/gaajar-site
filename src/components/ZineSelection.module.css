@@ -75,6 +75,10 @@
   justify-content: center;
 }
 
+.backBtn {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .overlay {
     padding: 10px;
@@ -89,5 +93,14 @@
   }
   .img {
     width: 110px;
+  }
+  .closeX {
+    display: none;
+  }
+  .backBtn {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 11px;
+    padding: 9px 16px 10px;
   }
 }

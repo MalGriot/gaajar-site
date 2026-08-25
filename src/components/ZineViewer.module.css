@@ -35,184 +35,25 @@
 .bookArea {
   position: relative;
   width: 100%;
-  max-width: 720px;
-  perspective: 1700px;
-  touch-action: pan-y;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 20px);
 }
 
-.book {
+/* page-flip.js (StPageFlip) builds its own canvas inside this element,
+   sized by the width/height/min-max bounds passed to `new PageFlip(...)`
+   — this wrapper just centers that canvas and caps how wide the spread
+   can grow, per book, so a physically smaller zine's pages stay visibly
+   smaller than a "novel size" one instead of filling the same box. */
+.flipMount {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;
-  transform-style: preserve-3d;
-}
-
-.book::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 1%;
-  bottom: 1%;
-  width: 26px;
-  transform: translateX(-50%);
-  background: linear-gradient(to right, transparent, var(--shadow) 50%, transparent);
-  opacity: 0.4;
-  z-index: 900;
-  pointer-events: none;
-}
-
-.page {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 50%;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1);
-  cursor: grab;
-  touch-action: pan-y;
-}
-
-.page:active {
-  cursor: grabbing;
-}
-
-.pageFace,
-.pageFaceBack {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  background: var(--paper-2);
-  border: 1.4px solid var(--ink);
-  box-shadow: 5px 8px 14px var(--shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(16px, 4vw, 34px);
-  overflow: hidden;
-}
-
-.pageFaceBack {
-  transform: rotateY(180deg);
-}
-
-/* Darkens toward the spine edge as a leaf passes through the turn, peaking
-   edge-on (progress 0.5) — a cheap stand-in for a real paper-curl shadow. */
-.pageFold {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.65), transparent 55%);
-}
-
-/* Button/key-triggered turns play as a CSS animation rather than a JS-driven
-   one — requestAnimationFrame stalls on a backgrounded tab and can wedge
-   navigation, but a CSS animation keeps its own timeline regardless, and
-   still resolves (instantly, via the reduced-motion rule below) once the
-   tab is foregrounded again. */
-@keyframes turnNext {
-  0% {
-    transform: rotateY(0deg) scaleX(1);
-  }
-  50% {
-    transform: rotateY(-90deg) scaleX(0.94);
-  }
-  100% {
-    transform: rotateY(-180deg) scaleX(1);
-  }
-}
-
-@keyframes turnPrev {
-  0% {
-    transform: rotateY(-180deg) scaleX(1);
-  }
-  50% {
-    transform: rotateY(-90deg) scaleX(0.94);
-  }
-  100% {
-    transform: rotateY(0deg) scaleX(1);
-  }
-}
-
-@keyframes turnFold {
-  0% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.turningNext {
-  animation: turnNext 520ms cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
-}
-
-.turningPrev {
-  animation: turnPrev 520ms cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
-}
-
-.turningNext .pageFold,
-.turningPrev .pageFold {
-  animation: turnFold 520ms cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
-}
-
-.pageImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  text-align: center;
-  width: 100%;
-  height: 100%;
-  background-image: repeating-linear-gradient(
-    135deg,
-    var(--line) 0,
-    var(--line) 1px,
-    transparent 1px,
-    transparent 14px
-  );
-}
-
-.placeholderStamp {
-  font-size: clamp(10px, 1.6vw, 13px);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--rust);
-  border: 1.4px dashed var(--rust);
-  padding: 5px 12px;
-  transform: rotate(-6deg);
-}
-
-.placeholderText {
-  font-size: clamp(11px, 1.4vw, 13px);
-  color: var(--ink-soft);
-  letter-spacing: 0.04em;
-}
-
-.pageNum {
-  position: absolute;
-  bottom: 10px;
-  right: 14px;
-  font-size: 11px;
-  color: var(--ink-soft);
+  filter: drop-shadow(8px 12px 16px var(--shadow));
 }
 
 .navBtn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: none;
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -225,12 +66,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 950;
+  z-index: 10;
   transition: transform 0.16s ease;
 }
 
 .navBtn:hover:not(:disabled) {
-  transform: translateY(-50%) scale(1.08);
+  transform: scale(1.08);
 }
 
 .navBtn:disabled {
@@ -238,12 +79,12 @@
   cursor: not-allowed;
 }
 
-.navPrev {
-  left: -16px;
-}
-
-.navNext {
-  right: -16px;
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .pageIndicator {
@@ -252,10 +93,11 @@
   letter-spacing: 0.04em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .page {
-    cursor: pointer;
-  }
+.sampleNote {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  font-style: italic;
 }
 
 @media (max-width: 640px) {
@@ -276,11 +118,5 @@
     width: 30px;
     height: 30px;
     font-size: 16px;
-  }
-  .navPrev {
-    left: -8px;
-  }
-  .navNext {
-    right: -8px;
   }
 }

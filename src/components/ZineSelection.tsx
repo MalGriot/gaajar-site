@@ -19,6 +19,7 @@ export default function ZineSelection({
   const [viewerOpen, setViewerOpen] = useState(false);
   const openBtnRef = useRef<HTMLButtonElement>(null);
   const closeXRef = useRef<HTMLButtonElement>(null);
+  const closeBackRef = useRef<HTMLButtonElement>(null);
 
   // Reset to the card state whenever the selected book changes (including close) —
   // adjusted during render per React's guidance, rather than in an effect.
@@ -47,12 +48,20 @@ export default function ZineSelection({
   }, [onClose, viewerOpen]);
 
   // Only on a fresh selection — not on every viewerOpen toggle, which would
-  // clobber onBack's explicit refocus onto the "Open Zine" button.
+  // clobber onBack's explicit refocus onto the "Open Zine" button. Focus
+  // whichever close control is actually visible for the current viewport —
+  // the mobile "← Back" button and the desktop "×" swap via CSS, not React.
   useEffect(() => {
-    if (book) closeXRef.current?.focus();
+    if (!book) return;
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
+    (isMobile ? closeBackRef : closeXRef).current?.focus();
   }, [book]);
 
   const show = Boolean(book);
+  // No real interior scans exist for this book (only the placeholder spread
+  // ZineViewer falls back to) — offering a page-turn preview with nothing
+  // real to show is worse than not offering one, so skip straight to Buy.
+  const hasPreview = Boolean(book && book.previewImages.length > 0);
 
   return (
     <div
@@ -70,6 +79,14 @@ export default function ZineSelection({
             <button ref={closeXRef} className={styles.closeX} onClick={onClose} aria-label="Close">
               &times;
             </button>
+            <button
+              ref={closeBackRef}
+              className={`${infoStyles.btn} ${infoStyles.ghost} ${styles.backBtn}`}
+              onClick={onClose}
+              aria-label="Close"
+            >
+              &larr; Back
+            </button>
             <Image
               src={book.cover}
               alt={`${book.title} cover`}
@@ -81,9 +98,11 @@ export default function ZineSelection({
               book={book}
               actions={
                 <>
-                  <PushButton ref={openBtnRef} onClick={() => setViewerOpen(true)}>
-                    Open Zine &rarr;
-                  </PushButton>
+                  {hasPreview && (
+                    <PushButton ref={openBtnRef} onClick={() => setViewerOpen(true)}>
+                      Open Zine &rarr;
+                    </PushButton>
+                  )}
                   <a
                     className={`${infoStyles.btn} ${infoStyles.ghost}`}
                     href={book.purchaseUrl}
