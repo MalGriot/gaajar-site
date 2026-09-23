@@ -10,11 +10,14 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ isDark, onToggle, className }: ThemeToggleProps) {
   return (
-    <div className={className ? `${styles.wrap} ${className}` : styles.wrap}>
+    <label
+      className={className ? `${styles.wrap} ${className}` : styles.wrap}
+      aria-label="Toggle dark mode"
+    >
       <div className={styles.outer}>
         <div className={styles.inner}>
           <div className={styles.dot} />
-          <label className={styles.track} aria-label="Toggle dark mode">
+          <div className={styles.track}>
             <input
               type="checkbox"
               className={styles.hidden}
@@ -28,10 +31,10 @@ export default function ThemeToggle({ isDark, onToggle, className }: ThemeToggle
               <div className={styles.panelLeft} />
               <div className={styles.panelRight} />
             </div>
-          </label>
+          </div>
           <div className={styles.bar} />
         </div>
       </div>
-    </div>
+    </label>
   );
 }

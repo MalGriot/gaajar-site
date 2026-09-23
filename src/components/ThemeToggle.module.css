@@ -4,6 +4,7 @@
   width: 62px;
   height: 35px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .outer {
@@ -46,7 +47,6 @@
   height: 40px;
   border: 4px solid var(--ink);
   border-radius: 4px;
-  cursor: pointer;
 }
 
 .track:has(input:checked) {
